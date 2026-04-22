@@ -1,0 +1,790 @@
+
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Laadkosten dashboard 2026</title>
+<style>
+  :root{
+    --bg1:#0f172a;
+    --bg2:#1e293b;
+    --card:rgba(255,255,255,.08);
+    --card2:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.12);
+    --txt:#eef2ff;
+    --muted:#cbd5e1;
+    --good:#34d399;
+    --warn:#fbbf24;
+    --blue:#60a5fa;
+    --violet:#a78bfa;
+    --danger:#f87171;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(circle at top left, rgba(96,165,250,.15), transparent 30%),
+      radial-gradient(circle at top right, rgba(167,139,250,.12), transparent 28%),
+      linear-gradient(160deg,var(--bg1),#111827 55%,#0b1220);
+    min-height:100vh;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:18px 18px 36px}
+  h1{font-size:32px;line-height:1.1;margin:0 0 6px}
+  h2{font-size:22px;line-height:1.15}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .row{display:grid;gap:14px}
+  .circles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .circle{
+    aspect-ratio:1/1;border-radius:999px;display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:18px;box-shadow:inset 0 0 0 8px rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.22);
+    border:1px solid rgba(255,255,255,.08);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .circle:active{transform:scale(.985)}
+  .circle .label{font-size:15px;color:#e2e8f0;margin-bottom:8px}
+  .circle .value{font-size:34px;font-weight:800;line-height:1.05}
+  .blue{background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.15), rgba(96,165,250,.34) 40%, rgba(96,165,250,.18) 70%)}
+  .green{background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), rgba(52,211,153,.34) 40%, rgba(52,211,153,.18) 70%)}
+  .gold{background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.14), rgba(251,191,36,.32) 40%, rgba(251,191,36,.18) 70%)}
+  .violet{background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), rgba(167,139,250,.32) 40%, rgba(167,139,250,.18) 70%)}
+  .card{
+    margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;
+    backdrop-filter: blur(16px);-webkit-backdrop-filter: blur(16px);
+    box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  select,input,button{
+    font:inherit;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);
+    color:var(--txt);padding:12px 14px;outline:none;min-height:48px;
+  }
+  input::placeholder{color:#94a3b8}
+  button{
+    background:linear-gradient(180deg,rgba(96,165,250,.28),rgba(96,165,250,.18));
+    font-weight:700;cursor:pointer;
+  }
+  button:hover{filter:brightness(1.05)}
+  .ghost{background:rgba(255,255,255,.06)}
+  .danger{background:linear-gradient(180deg,rgba(248,113,113,.28),rgba(248,113,113,.18))}
+  .success{background:linear-gradient(180deg,rgba(52,211,153,.28),rgba(52,211,153,.18))}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:middle}
+  th{color:#cbd5e1;font-size:14px}
+  .num{text-align:right}
+  .actions{display:flex;gap:8px;justify-content:flex-end}
+  .pill{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px;color:#dbeafe}
+  .pill.ok{background:rgba(52,211,153,.13);color:#d1fae5}
+  .pill.info{background:rgba(96,165,250,.13);color:#dbeafe}
+  details{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.06)}
+  summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+  summary::-webkit-details-marker{display:none}
+  .details-body{padding:0 16px 16px}
+  .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .mini{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}
+  .mini .k{color:#cbd5e1;font-size:14px}
+  .mini .v{font-size:26px;font-weight:800;margin-top:4px}
+  .note{font-size:14px;color:#cbd5e1;line-height:1.45}
+  .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .chart-wrap{
+    margin-top:10px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:14px;
+  }
+  canvas{width:100%;height:280px;display:block}
+  .helper{font-size:13px;color:#cbd5e1}
+  .save-indicator{min-height:22px}
+  .footer-space{height:12px}
+  @media (max-width:700px){
+    .circles,.grid2,.grid3,.grid4,.totals{grid-template-columns:1fr}
+    h1{font-size:26px}
+    .circle .value{font-size:28px}
+    th,td{padding:10px 8px;font-size:14px}
+    canvas{height:240px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Laadkosten dashboard 2026</h1>
+  <p class="sub">Voeg alleen een laadsessie toe als je thuis hebt geladen. Je vult per sessie de datum, geladen kWh en het totale Markt+ bedrag van die sessie in.</p>
+
+  <div class="row circles">
+    <div class="circle blue"><div><div class="label">Totaal geladen kWh 2026</div><div class="value" id="yKwh">0,00</div></div></div>
+    <div class="circle green"><div><div class="label">Totaal € 2026 excl. EB</div><div class="value" id="yEur">€ 0,00</div></div></div>
+    <div class="circle gold"><div><div class="label">Totaal geladen kWh maand</div><div class="value" id="mKwh">0,00</div></div></div>
+    <div class="circle violet"><div><div class="label">Totaal € maand excl. EB</div><div class="value" id="mEur">€ 0,00</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <label for="monthSel" class="muted">Maand</label>
+      <select id="monthSel"></select>
+      <button type="button" id="prevBtn" class="ghost">Vorige</button>
+      <button type="button" id="nextBtn" class="ghost">Volgende</button>
+      <span class="pill ok" id="storageStatus">Opslag actief</span>
+      <span class="pill info" id="backupStatus">Back-up aanbevolen</span>
+    </div>
+
+    <details open>
+      <summary>
+        <span>Laadsessie toevoegen</span>
+        <span class="muted">tik om te openen/sluiten</span>
+      </summary>
+      <div class="details-body">
+        <div class="grid3">
+          <div>
+            <div class="muted" style="margin:0 0 6px">Datum</div>
+            <input id="sessieDatum" type="date">
+          </div>
+          <div>
+            <div class="muted" style="margin:0 0 6px">Geladen kWh</div>
+            <input id="sessieKwh" type="number" step="0.01" inputmode="decimal" placeholder="Bijv. 18,4">
+          </div>
+          <div>
+            <div class="muted" style="margin:0 0 6px">Markt+ prijs totaal (€)</div>
+            <input id="sessieBedrag" type="number" step="0.01" inputmode="decimal" placeholder="Bijv. 1,48">
+          </div>
+        </div>
+        <div class="controls" style="margin-top:12px">
+          <button type="button" id="addBtn">Opslaan</button>
+          <button type="button" id="todayBtn" class="ghost">Vandaag</button>
+          <button type="button" id="clearInputsBtn" class="ghost">Leegmaken</button>
+          <button type="button" id="backupBtn" class="success">Back-up</button>
+          <button type="button" id="restoreBtn" class="ghost">Herstel</button>
+          <input id="restoreInput" type="file" accept="application/json" hidden>
+        </div>
+        <p class="note">Je hoeft niet elke dag te laden. Je voegt alleen een sessie toe op de dagen waarop je echt thuis hebt geladen.</p>
+        <p class="note save-indicator" id="saveMsg"></p>
+      </div>
+    </details>
+
+    <div style="overflow:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th class="num">Geladen kWh</th>
+            <th class="num">Markt+ totaal</th>
+            <th class="num">€/kWh</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="sessiesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">
+      <h2 style="margin:0">Extra inzichten</h2>
+      <span class="pill info">Live per geselecteerde maand</span>
+    </div>
+    <div class="grid4" style="margin-top:12px">
+      <div class="mini"><div class="k">Gemiddelde € / kWh</div><div class="v" id="avgPerKwh">€ 0,00</div></div>
+      <div class="mini"><div class="k">Aantal sessies maand</div><div class="v" id="sessieCount">0</div></div>
+      <div class="mini"><div class="k">Gemiddelde sessie</div><div class="v" id="avgSessionKwh">0,00</div></div>
+      <div class="mini"><div class="k">Goedkoopste sessie € / kWh</div><div class="v" id="lowestPerKwh">€ 0,00</div></div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="mini"><div class="k">Goedkoopste maand 2026</div><div class="v" id="bestMonth">-</div></div>
+      <div class="mini"><div class="k">Duurste maand 2026</div><div class="v" id="worstMonth">-</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">
+      <h2 style="margin:0">Maandgrafiek 2026</h2>
+      <span class="helper">Blauw = kWh · Groen = € excl. EB</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="monthChart" width="940" height="280"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 8px">Maandafsluiting</h2>
+    <p class="note">Bovenin wordt energiebelasting niet meegenomen. Hier onderaan kun je per maand het autodeel van de netto energiebelasting laten berekenen.</p>
+    <div class="grid2">
+      <div>
+        <div class="muted" style="margin:0 0 6px">Totaal kWh overig gebruik maand</div>
+        <input id="otherKwh" type="number" step="0.01" inputmode="decimal" placeholder="Bijv. 185">
+      </div>
+      <div>
+        <div class="muted" style="margin:0 0 6px">Netto energiebelasting maand (€)</div>
+        <input id="netEb" type="number" step="0.01" inputmode="decimal" placeholder="Bijv. 6,45">
+      </div>
+    </div>
+
+    <div class="totals" style="margin-top:14px">
+      <div class="mini"><div class="k">Auto kWh maand</div><div class="v" id="sumAutoKwh">0,00</div></div>
+      <div class="mini"><div class="k">Autodeel EB maand</div><div class="v" id="sumAutoEb">€ 0,00</div></div>
+      <div class="mini"><div class="k">Totale autokosten incl. EB</div><div class="v" id="sumInclEb">€ 0,00</div></div>
+    </div>
+    <p class="note" id="formulaText" style="margin-top:14px"></p>
+  </div>
+  <div class="footer-space"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const KEY = 'laadkosten_dashboard_2026_v13_pro';
+  const DB_NAME = 'laadkosten_dashboard_db';
+  const STORE_NAME = 'dashboard_state';
+  const STATE_ID = 'main';
+  const months = [
+    ['2026-01','Januari 2026'],['2026-02','Februari 2026'],['2026-03','Maart 2026'],
+    ['2026-04','April 2026'],['2026-05','Mei 2026'],['2026-06','Juni 2026'],
+    ['2026-07','Juli 2026'],['2026-08','Augustus 2026'],['2026-09','September 2026'],
+    ['2026-10','Oktober 2026'],['2026-11','November 2026'],['2026-12','December 2026']
+  ];
+
+  const $ = id => document.getElementById(id);
+  let state;
+  let db = null;
+  let saveTimer = null;
+  let saveMsgTimer = null;
+  let useIndexedDB = 'indexedDB' in window;
+
+  function emptyState(){
+    const monthData = {};
+    months.forEach(([m]) => {
+      monthData[m] = { sessions: [], otherKwh: '', netEb: '' };
+    });
+    return { version: 13, selectedMonth: '2026-01', monthData, updatedAt: new Date().toISOString() };
+  }
+
+  function parseNum(v){
+    if(v === null || v === undefined || v === '') return 0;
+    const n = Number(String(v).replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function fmtNum(n){
+    return (n || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function fmtEur(n){
+    return '€ ' + (n || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function shortMonth(monthKey){
+    const labels = {
+      '2026-01':'Jan','2026-02':'Feb','2026-03':'Mrt','2026-04':'Apr',
+      '2026-05':'Mei','2026-06':'Jun','2026-07':'Jul','2026-08':'Aug',
+      '2026-09':'Sep','2026-10':'Okt','2026-11':'Nov','2026-12':'Dec'
+    };
+    return labels[monthKey] || monthKey;
+  }
+
+  function monthLabel(monthKey){
+    const found = months.find(([m]) => m === monthKey);
+    return found ? found[1] : monthKey;
+  }
+
+  function normalizeState(raw){
+    const base = emptyState();
+    if(!raw || typeof raw !== 'object') return base;
+    if(!raw.monthData || typeof raw.monthData !== 'object') raw.monthData = {};
+    months.forEach(([m]) => {
+      const cur = raw.monthData[m] || {};
+      raw.monthData[m] = {
+        sessions: Array.isArray(cur.sessions) ? cur.sessions : [],
+        otherKwh: cur.otherKwh ?? '',
+        netEb: cur.netEb ?? ''
+      };
+    });
+    raw.selectedMonth = raw.selectedMonth || '2026-01';
+    raw.version = raw.version || 13;
+    raw.updatedAt = raw.updatedAt || new Date().toISOString();
+    return raw;
+  }
+
+  function openDb(){
+    return new Promise((resolve, reject) => {
+      if(!useIndexedDB) return resolve(null);
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = function(event){
+        const database = event.target.result;
+        if(!database.objectStoreNames.contains(STORE_NAME)){
+          database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = function(){
+        db = request.result;
+        resolve(db);
+      };
+      request.onerror = function(){
+        reject(request.error);
+      };
+    });
+  }
+
+  function idbGet(){
+    return new Promise((resolve, reject) => {
+      if(!db) return resolve(null);
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(STATE_ID);
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function idbPut(value){
+    return new Promise((resolve, reject) => {
+      if(!db) return resolve();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put({ id: STATE_ID, value });
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function storageStatus(text){
+    $('storageStatus').textContent = text;
+  }
+
+  function setMsg(msg, timeout){
+    $('saveMsg').textContent = msg || '';
+    if(saveMsgTimer) clearTimeout(saveMsgTimer);
+    if(msg && timeout){
+      saveMsgTimer = setTimeout(() => $('saveMsg').textContent = '', timeout);
+    }
+  }
+
+  async function loadState(){
+    try{
+      if(useIndexedDB){
+        await openDb();
+        const fromDb = await idbGet();
+        if(fromDb){
+          storageStatus('IndexedDB actief');
+          return normalizeState(fromDb);
+        }
+      }
+    } catch(e){}
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(raw){
+        storageStatus('Lokale opslag actief');
+        return normalizeState(JSON.parse(raw));
+      }
+    } catch(e){}
+    storageStatus(useIndexedDB ? 'IndexedDB actief' : 'Lokale opslag actief');
+    return emptyState();
+  }
+
+  async function saveState(immediate){
+    state.updatedAt = new Date().toISOString();
+    const doSave = async () => {
+      try{
+        if(useIndexedDB && db){
+          await idbPut(state);
+          localStorage.setItem(KEY, JSON.stringify(state));
+        }else{
+          localStorage.setItem(KEY, JSON.stringify(state));
+        }
+        setMsg('Opgeslagen.', 1400);
+        updateBackupStatus();
+      }catch(e){
+        setMsg('Opslaan is niet gelukt.', 2500);
+      }
+    };
+    if(immediate){
+      await doSave();
+      return;
+    }
+    if(saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, 180);
+  }
+
+  function currentMonth(){
+    return state.monthData[state.selectedMonth];
+  }
+
+  function initMonthSelect(){
+    const sel = $('monthSel');
+    sel.innerHTML = '';
+    months.forEach(([value, label]) => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    sel.value = state.selectedMonth;
+  }
+
+  function renderInputs(){
+    $('monthSel').value = state.selectedMonth;
+    $('otherKwh').value = currentMonth().otherKwh || '';
+    $('netEb').value = currentMonth().netEb || '';
+    const d = $('sessieDatum');
+    if(!d.value || !d.value.startsWith(state.selectedMonth)){
+      d.value = state.selectedMonth + '-01';
+    }
+  }
+
+  function renderTable(){
+    const body = $('sessiesBody');
+    body.innerHTML = '';
+    const rows = currentMonth().sessions.slice().sort((a,b) => a.date.localeCompare(b.date));
+
+    if(rows.length === 0){
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="5" class="muted">Nog geen laadsessies in deze maand.</td>';
+      body.appendChild(tr);
+      return;
+    }
+
+    rows.forEach((s, index) => {
+      const kwh = parseNum(s.kwh);
+      const amount = parseNum(s.amount);
+      const perKwh = kwh > 0 ? amount / kwh : 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${new Date(s.date + 'T12:00:00').toLocaleDateString('nl-NL')}</td>
+        <td class="num">${fmtNum(kwh)}</td>
+        <td class="num">${fmtEur(amount)}</td>
+        <td class="num">${fmtEur(perKwh)}</td>
+        <td class="actions"><button type="button" class="ghost" data-del="${index}">Verwijderen</button></td>
+      `;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const idx = Number(this.getAttribute('data-del'));
+        const sorted = currentMonth().sessions.slice().sort((a,b) => a.date.localeCompare(b.date));
+        const target = sorted[idx];
+        const realIdx = currentMonth().sessions.findIndex(s => s.date === target.date && String(s.kwh) === String(target.kwh) && String(s.amount) === String(target.amount));
+        if(realIdx > -1){
+          currentMonth().sessions.splice(realIdx, 1);
+          saveState();
+          renderAll();
+        }
+      });
+    });
+  }
+
+  function calculateMonthTotals(monthKey){
+    let kwh = 0, eur = 0;
+    state.monthData[monthKey].sessions.forEach(s => {
+      kwh += parseNum(s.kwh);
+      eur += parseNum(s.amount);
+    });
+    return { kwh, eur, perKwh: kwh > 0 ? eur / kwh : 0 };
+  }
+
+  function renderInsights(){
+    const cur = calculateMonthTotals(state.selectedMonth);
+    const sessions = currentMonth().sessions.map(s => ({
+      kwh: parseNum(s.kwh),
+      amount: parseNum(s.amount),
+      perKwh: parseNum(s.kwh) > 0 ? parseNum(s.amount)/parseNum(s.kwh) : 0
+    })).filter(s => s.kwh > 0);
+
+    const avgSession = sessions.length ? cur.kwh / sessions.length : 0;
+    const lowest = sessions.length ? Math.min(...sessions.map(s => s.perKwh)) : 0;
+
+    $('avgPerKwh').textContent = fmtEur(cur.perKwh);
+    $('sessieCount').textContent = String(sessions.length);
+    $('avgSessionKwh').textContent = fmtNum(avgSession);
+    $('lowestPerKwh').textContent = fmtEur(lowest);
+
+    const allMonths = months.map(([m]) => ({ key:m, ...calculateMonthTotals(m) })).filter(m => m.kwh > 0);
+    if(allMonths.length){
+      const best = allMonths.reduce((a,b) => a.perKwh <= b.perKwh ? a : b);
+      const worst = allMonths.reduce((a,b) => a.perKwh >= b.perKwh ? a : b);
+      $('bestMonth').textContent = shortMonth(best.key) + ' · ' + fmtEur(best.perKwh);
+      $('worstMonth').textContent = shortMonth(worst.key) + ' · ' + fmtEur(worst.perKwh);
+    }else{
+      $('bestMonth').textContent = '-';
+      $('worstMonth').textContent = '-';
+    }
+  }
+
+  function renderTotals(){
+    let yKwh = 0;
+    let yEur = 0;
+    months.forEach(([m]) => {
+      state.monthData[m].sessions.forEach(s => {
+        yKwh += parseNum(s.kwh);
+        yEur += parseNum(s.amount);
+      });
+    });
+
+    let mKwh = 0;
+    let mEur = 0;
+    currentMonth().sessions.forEach(s => {
+      mKwh += parseNum(s.kwh);
+      mEur += parseNum(s.amount);
+    });
+
+    $('yKwh').textContent = fmtNum(yKwh);
+    $('yEur').textContent = fmtEur(yEur);
+    $('mKwh').textContent = fmtNum(mKwh);
+    $('mEur').textContent = fmtEur(mEur);
+    $('sumAutoKwh').textContent = fmtNum(mKwh);
+
+    const other = parseNum(currentMonth().otherKwh);
+    const netEb = Math.max(0, parseNum(currentMonth().netEb));
+    const totalKwh = mKwh + other;
+    const autoEb = totalKwh > 0 ? (mKwh / totalKwh) * netEb : 0;
+
+    $('sumAutoEb').textContent = fmtEur(autoEb);
+    $('sumInclEb').textContent = fmtEur(mEur + autoEb);
+    $('formulaText').textContent =
+      'Formule: autodeel EB = (auto kWh maand / totaal kWh maand) × netto energiebelasting maand. ' +
+      'Hier: (' + fmtNum(mKwh) + ' / ' + fmtNum(totalKwh) + ') × ' + fmtEur(netEb) + ' = ' + fmtEur(autoEb) + '.';
+  }
+
+  function drawChart(){
+    const canvas = $('monthChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(320, Math.floor(rect.width * dpr));
+    const height = Math.max(220, Math.floor(rect.height * dpr));
+    if(canvas.width !== width || canvas.height !== height){
+      canvas.width = width;
+      canvas.height = height;
+    }
+    ctx.clearRect(0,0,width,height);
+
+    const pad = { left: 44*dpr, right: 18*dpr, top: 18*dpr, bottom: 34*dpr };
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+
+    const values = months.map(([m]) => calculateMonthTotals(m));
+    const maxKwh = Math.max(1, ...values.map(v => v.kwh));
+    const maxEur = Math.max(1, ...values.map(v => v.eur));
+    const steps = 4;
+
+    ctx.strokeStyle = 'rgba(255,255,255,.10)';
+    ctx.lineWidth = 1*dpr;
+    for(let i=0;i<=steps;i++){
+      const y = pad.top + innerH * (i/steps);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(width-pad.right, y);
+      ctx.stroke();
+    }
+
+    const groupW = innerW / months.length;
+    const barW = groupW * 0.28;
+
+    values.forEach((v, i) => {
+      const xCenter = pad.left + groupW * i + groupW/2;
+      const kwhH = (v.kwh / maxKwh) * innerH;
+      const eurH = (v.eur / maxEur) * innerH;
+
+      roundBar(ctx, xCenter - barW - 4*dpr, pad.top + innerH - kwhH, barW, kwhH, 8*dpr, 'rgba(96,165,250,.88)');
+      roundBar(ctx, xCenter + 4*dpr, pad.top + innerH - eurH, barW, eurH, 8*dpr, 'rgba(52,211,153,.88)');
+
+      ctx.fillStyle = 'rgba(226,232,240,.95)';
+      ctx.font = `${12*dpr}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(shortMonth(months[i][0]), xCenter, height - 10*dpr);
+    });
+
+    ctx.fillStyle = 'rgba(203,213,225,.9)';
+    ctx.font = `${11*dpr}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('kWh', 8*dpr, pad.top + 8*dpr);
+    ctx.fillStyle = 'rgba(209,250,229,.95)';
+    ctx.fillText('€', 8*dpr, pad.top + 24*dpr);
+  }
+
+  function roundBar(ctx, x, y, w, h, r, color){
+    const radius = Math.min(r, w/2, h/2);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x+radius, y);
+    ctx.lineTo(x+w-radius, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+radius);
+    ctx.lineTo(x+w, y+h);
+    ctx.lineTo(x, y+h);
+    ctx.lineTo(x, y+radius);
+    ctx.quadraticCurveTo(x, y, x+radius, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function updateBackupStatus(){
+    const ts = state.updatedAt ? new Date(state.updatedAt) : null;
+    $('backupStatus').textContent = ts && !Number.isNaN(ts.getTime())
+      ? 'Laatste opslag ' + ts.toLocaleTimeString('nl-NL', { hour:'2-digit', minute:'2-digit' })
+      : 'Back-up aanbevolen';
+  }
+
+  function renderAll(){
+    renderInputs();
+    renderTable();
+    renderTotals();
+    renderInsights();
+    drawChart();
+    updateBackupStatus();
+  }
+
+  async function addSession(){
+    setMsg('');
+    const date = $('sessieDatum').value;
+    const kwh = parseNum($('sessieKwh').value);
+    const amount = parseNum($('sessieBedrag').value);
+
+    if(!date){
+      setMsg('Kies eerst een datum.', 1800);
+      return;
+    }
+    if(!date.startsWith(state.selectedMonth)){
+      setMsg('De datum valt niet in de geselecteerde maand.', 2200);
+      return;
+    }
+    if(kwh <= 0){
+      setMsg('Vul een geladen kWh groter dan 0 in.', 2200);
+      return;
+    }
+    if(amount < 0){
+      setMsg('Vul een geldig Markt+ totaalbedrag in.', 2200);
+      return;
+    }
+
+    currentMonth().sessions.push({
+      date: date,
+      kwh: Number(kwh.toFixed(2)),
+      amount: Number(amount.toFixed(2))
+    });
+
+    $('sessieKwh').value = '';
+    $('sessieBedrag').value = '';
+    await saveState(true);
+    renderAll();
+  }
+
+  function backupData(){
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      app: 'Laadkosten dashboard 2026',
+      state
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `laaddashboard-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setMsg('Back-up gedownload.', 2000);
+  }
+
+  async function restoreData(file){
+    try{
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const nextState = normalizeState(parsed.state || parsed);
+      state = nextState;
+      await saveState(true);
+      renderAll();
+      setMsg('Back-up hersteld.', 2200);
+    }catch(e){
+      setMsg('Herstellen is niet gelukt. Kies een geldig back-upbestand.', 2600);
+    }
+  }
+
+  function bindEvents(){
+    $('addBtn').addEventListener('click', addSession);
+    $('todayBtn').addEventListener('click', function(){
+      const today = new Date();
+      const iso = today.toISOString().slice(0,10);
+      const month = iso.slice(0,7);
+      if(month.startsWith('2026-')){
+        state.selectedMonth = month;
+        $('sessieDatum').value = iso;
+        saveState();
+        renderAll();
+      }
+    });
+    $('clearInputsBtn').addEventListener('click', function(){
+      $('sessieKwh').value = '';
+      $('sessieBedrag').value = '';
+      setMsg('');
+    });
+    $('backupBtn').addEventListener('click', backupData);
+    $('restoreBtn').addEventListener('click', function(){
+      $('restoreInput').click();
+    });
+    $('restoreInput').addEventListener('change', function(){
+      const file = this.files && this.files[0];
+      if(file) restoreData(file);
+      this.value = '';
+    });
+    $('monthSel').addEventListener('change', function(){
+      state.selectedMonth = this.value;
+      saveState();
+      renderAll();
+    });
+    $('prevBtn').addEventListener('click', function(){
+      const idx = months.findIndex(([m]) => m === state.selectedMonth);
+      if(idx > 0){
+        state.selectedMonth = months[idx - 1][0];
+        saveState();
+        renderAll();
+      }
+    });
+    $('nextBtn').addEventListener('click', function(){
+      const idx = months.findIndex(([m]) => m === state.selectedMonth);
+      if(idx < months.length - 1){
+        state.selectedMonth = months[idx + 1][0];
+        saveState();
+        renderAll();
+      }
+    });
+    $('otherKwh').addEventListener('input', function(){
+      currentMonth().otherKwh = this.value;
+      saveState();
+      renderTotals();
+    });
+    $('netEb').addEventListener('input', function(){
+      currentMonth().netEb = this.value;
+      saveState();
+      renderTotals();
+    });
+    window.addEventListener('resize', drawChart);
+    document.querySelectorAll('.circle').forEach((el, idx) => {
+      el.addEventListener('click', function(){
+        if(idx < 2){
+          document.querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+        }else{
+          document.querySelectorAll('.card')[3].scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+      });
+    });
+  }
+
+  async function init(){
+    state = await loadState();
+    initMonthSelect();
+    bindEvents();
+    renderAll();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
